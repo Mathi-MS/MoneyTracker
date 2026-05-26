@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request } from "express";
 import { z } from "zod";
-import { eq, and, ilike, gte, lte, inArray, sql } from "../db";
+import { eq, and, ilike, gte, lte, inArray, isNull, isNotNull } from "../db";
 import { db, transactionsTable, categoriesTable, personsTable } from "../db";
 
 declare global {
@@ -144,8 +144,11 @@ router.get("/transactions", async (req, res): Promise<void> => {
   const queryData = query.data as z.infer<typeof ListTransactionsQueryParams>;
 
   const conditions = [eq(transactionsTable.userId, req.user.id)];
-  if (queryData.type) {
+  if (queryData.type === "repayment") {
+    conditions.push(isNotNull(transactionsTable.parentTransactionId));
+  } else if (queryData.type) {
     conditions.push(eq(transactionsTable.type, queryData.type));
+    conditions.push(isNull(transactionsTable.parentTransactionId));
   }
   if (queryData.categoryId) {
     conditions.push(eq(transactionsTable.categoryId, queryData.categoryId));

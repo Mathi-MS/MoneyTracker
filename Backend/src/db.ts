@@ -369,6 +369,16 @@ export function inArray(field: any, values: unknown[]): WhereCondition {
   return { [col]: { $in: values } };
 }
 
+export function isNull(field: any): WhereCondition {
+  const col = field?._col ?? field?.name ?? String(field);
+  return { [col]: null };
+}
+
+export function isNotNull(field: any): WhereCondition {
+  const col = field?._col ?? field?.name ?? String(field);
+  return { [col]: { $ne: null } };
+}
+
 export function sql(strings: TemplateStringsArray, ...values: unknown[]) {
   return strings.raw[0];
 }

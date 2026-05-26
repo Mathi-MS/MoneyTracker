@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListTransactions, useCreateTransaction, useGetTransactionHistory } from "@/lib/api-client";
@@ -22,8 +22,9 @@ function getRepaymentType(txType: string) {
 
 export default function Transactions() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [type, setType] = useState<string>("all");
+  const [type, setType] = useState<string>(searchParams.get("type") || "all");
 
   const queryParams = {
     ...(search ? { search } : {}),
@@ -144,6 +145,7 @@ export default function Transactions() {
               <SelectItem value="spend">Spend</SelectItem>
               <SelectItem value="lend">Lend</SelectItem>
               <SelectItem value="borrow">Borrow</SelectItem>
+              <SelectItem value="repayment">Repayment</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -169,7 +171,7 @@ export default function Transactions() {
               <p className="text-sm">Try adjusting your filters or add a new one.</p>
             </div>
           ) : (
-            transactions?.map((tx: any, i: number) => (
+            transactions?.filter((tx: any) => type === "all" || (type === "repayment" ? Boolean(tx.parentTransactionId) : !tx.parentTransactionId)).map((tx: any, i: number) => (
               <motion.div
                 key={tx.id}
                 initial={{ opacity: 0, y: 10 }}

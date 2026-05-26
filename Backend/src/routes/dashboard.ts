@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, gte, lte, sql } from "../db";
+import { eq, and, gte, lte, sql, isNull } from "../db";
 import { db, transactionsTable, categoriesTable } from "../db";
 
 const router: IRouter = Router();
@@ -115,6 +115,7 @@ router.get("/dashboard/category-breakdown", async (req, res): Promise<void> => {
       and(
         eq(transactionsTable.userId, userId),
         eq(transactionsTable.type, "spend"),
+        isNull(transactionsTable.parentTransactionId),
         gte(transactionsTable.date, startOfMonth),
       ),
     );

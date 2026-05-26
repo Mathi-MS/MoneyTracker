@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDownLeft, ArrowUpRight, Wallet, ArrowRightLeft, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: transactions, isLoading: isLoadingTransactions } = useListTransactions({ limit: 5 });
 
@@ -67,7 +68,7 @@ export default function Dashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="bg-secondary/50 border-none">
+          <Card className="bg-secondary/50 border-none cursor-pointer hover:bg-secondary/80 transition-colors" onClick={() => navigate('/transactions?type=lend')}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 bg-blue-500/20 text-blue-500 rounded-lg">
@@ -78,7 +79,7 @@ export default function Dashboard() {
               {isLoadingSummary ? <Skeleton className="h-6 w-20" /> : <div className="text-lg font-bold">{formatCurrency(summary?.totalLent || 0)}</div>}
             </CardContent>
           </Card>
-          <Card className="bg-secondary/50 border-none">
+          <Card className="bg-secondary/50 border-none cursor-pointer hover:bg-secondary/80 transition-colors" onClick={() => navigate('/transactions?type=borrow')}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 bg-amber-500/20 text-amber-500 rounded-lg">
