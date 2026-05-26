@@ -5,7 +5,7 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, Drawer
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
+import logo from "../../assests/money.png";
 export function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation().pathname;
   const navigate = useNavigate();
@@ -16,15 +16,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-primary/20 text-primary rounded-lg flex items-center justify-center">
-            <span className="font-bold text-sm">MS</span>
+            <img src={logo} alt="Money Tracker" className="w-5 h-5" />
           </div>
-          <span className="font-bold text-lg">Mathi</span>
+          <span className="font-bold text-lg">TRACK X</span>
         </Link>
         {user && (
           <Link to="/settings">
             <Avatar className="w-8 h-8 ring-2 ring-border cursor-pointer hover:ring-primary transition-all">
               <AvatarImage src={user.profileImageUrl || ""} alt={user.firstName || "User"} />
-              <AvatarFallback>{user.firstName?.charAt(0) || "U"}</AvatarFallback>
+              <AvatarFallback>{user.firstName?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
           </Link>
         )}
