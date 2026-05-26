@@ -1,9 +1,8 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth, AuthProvider } from "@/lib/auth";
-import { AppLayout } from "./components/layout/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
@@ -16,7 +15,7 @@ import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component, ...rest }: any) {
+function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -31,22 +30,22 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
     return <Login />;
   }
 
-  return <Component {...rest} />;
+  return <Component />;
 }
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
-      <Route path="/transactions/new" component={() => <ProtectedRoute component={TransactionForm} />} />
-      <Route path="/transactions/:id/edit" component={(params) => <ProtectedRoute component={TransactionForm} params={params} />} />
-      <Route path="/categories" component={() => <ProtectedRoute component={Categories} />} />
-      <Route path="/persons" component={() => <ProtectedRoute component={Persons} />} />
-      <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
-      <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
-      <Route component={NotFound} />
-    </Switch>
+    <Routes>
+      <Route path="/" element={<ProtectedRoute component={Dashboard} />} />
+      <Route path="/transactions" element={<ProtectedRoute component={Transactions} />} />
+      <Route path="/transactions/new" element={<ProtectedRoute component={TransactionForm} />} />
+      <Route path="/transactions/:id/edit" element={<ProtectedRoute component={TransactionForm} />} />
+      <Route path="/categories" element={<ProtectedRoute component={Categories} />} />
+      <Route path="/persons" element={<ProtectedRoute component={Persons} />} />
+      <Route path="/reports" element={<ProtectedRoute component={Reports} />} />
+      <Route path="/settings" element={<ProtectedRoute component={Settings} />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
@@ -55,9 +54,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <HashRouter>
             <Router />
-          </WouterRouter>
+          </HashRouter>
           <Toaster />
         </TooltipProvider>
       </AuthProvider>

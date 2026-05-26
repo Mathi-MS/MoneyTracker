@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListTransactions, useCreateTransaction, useGetTransactionHistory } from "@/lib/api-client";
@@ -21,7 +21,7 @@ function getRepaymentType(txType: string) {
 }
 
 export default function Transactions() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
 
@@ -72,7 +72,7 @@ export default function Transactions() {
   };
 
   const handleTransactionClick = (tx: any) => {
-    setLocation(`/transactions/${tx.id}/edit`);
+    navigate(`/transactions/${tx.id}/edit`);
   };
 
   const handleRepaymentSubmit = () => {

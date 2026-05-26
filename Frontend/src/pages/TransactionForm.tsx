@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   useGetTransaction, getGetTransactionQueryKey,
@@ -24,17 +24,14 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
 }
 
-export default function TransactionForm({ params }: { params?: { id?: string; params?: { id?: string } } }) {
-  const id = params?.params?.id || params?.id;
+export default function TransactionForm() {
+  const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialType = searchParams.get("type") || "spend";
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const initialType = searchParams.get("type") || "spend";
 
   const { data: transaction, isLoading: isLoadingTx, error: txError } = useGetTransaction(Number(id), {
     enabled: isEdit,
@@ -185,7 +182,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
                 onSuccess: () => {
                   queryClient.invalidateQueries();
                   toast({ title: "Repayment updated" });
-                  setLocation("/transactions");
+                  navigate("/transactions");
                 },
                 onError: (error: unknown) => {
                   const message = error instanceof Error ? error.message : "Unable to update repayment";
@@ -297,7 +294,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
         onSuccess: () => {
           queryClient.invalidateQueries();
           toast({ title: "Transaction updated" });
-          setLocation("/transactions");
+          navigate("/transactions");
         },
         onError: handleMutationError,
       });
@@ -306,7 +303,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
         onSuccess: () => {
           queryClient.invalidateQueries();
           toast({ title: "Transaction created" });
-          setLocation("/transactions");
+          navigate("/transactions");
         },
         onError: handleMutationError,
       });
@@ -319,7 +316,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
       onSuccess: () => {
         queryClient.invalidateQueries();
         toast({ title: "Transaction deleted" });
-        setLocation("/transactions");
+        navigate("/transactions");
       }
     });
   };
@@ -330,7 +327,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => setLocation("/transactions")}>
+          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full" onClick={() => navigate("/transactions")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <span className="font-bold text-lg">{isEdit ? "Edit Transaction" : "New Transaction"}</span>
@@ -602,7 +599,7 @@ export default function TransactionForm({ params }: { params?: { id?: string; pa
                           </div>
                           <div className="flex items-center gap-3">
                             <p className="font-semibold">{formatCurrency(entry.amount)}</p>
-                            <Button variant="ghost" size="sm" onClick={() => setLocation(`/transactions/${entry.id}/edit`)}>Edit</Button>
+                            <Button variant="ghost" size="sm" onClick={() => navigate(`/transactions/${entry.id}/edit`)}>Edit</Button>
                           </div>
                         </div>
                       ))}

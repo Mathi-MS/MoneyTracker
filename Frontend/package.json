@@ -68,7 +68,9 @@
     "typescript": "^5.8.3",
     "vaul": "^1.1.2",
     "vite": "^6.3.3",
-    "wouter": "^3.3.5",
     "zod": "^3.24.3"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.15.1"
   }
 }

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDownLeft, ArrowUpRight, Wallet, ArrowRightLeft, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
@@ -95,7 +95,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold">Recent Transactions</h2>
-            <Link href="/transactions" className="text-sm text-primary font-medium">See All</Link>
+            <Link to="/transactions" className="text-sm text-primary font-medium">See All</Link>
           </div>
 
           <div className="space-y-3">
@@ -122,7 +122,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: i * 0.05 }}
                 >
-                  <Link href={`/transactions/${tx.id}/edit`}>
+                  <Link to={`/transactions/${tx.id}/edit`}>
                     <div className="flex items-center gap-4 p-3 rounded-xl bg-card border border-border/50 hover:bg-secondary/50 transition-colors cursor-pointer active:scale-[0.98]">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg shadow-sm ${
                         tx.type === 'earn' ? 'bg-emerald-500/10 text-emerald-500' :
