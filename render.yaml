@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: moneytracker-backend
+    runtime: node
+    rootDir: Backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+
+  - type: static
+    name: moneytracker-frontend
+    rootDir: Frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist/public
+    envVars:
+      - key: VITE_API_URL
+        sync: false
