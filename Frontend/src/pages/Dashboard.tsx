@@ -77,6 +77,18 @@ export default function Dashboard() {
                 <span className="text-xs font-medium text-muted-foreground">Lent</span>
               </div>
               {isLoadingSummary ? <Skeleton className="h-6 w-20" /> : <div className="text-lg font-bold">{formatCurrency(summary?.totalLent || 0)}</div>}
+              {!isLoadingSummary && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Repaid:</span>
+                    <span className="text-green-600 font-semibold">{formatCurrency(summary?.lendRepaid || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Unpaid:</span>
+                    <span className="text-orange-600 font-semibold">{formatCurrency(summary?.lendUnpaid || 0)}</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="bg-secondary/50 border-none cursor-pointer hover:bg-secondary/80 transition-colors" onClick={() => navigate('/transactions?type=borrow')}>
@@ -88,6 +100,18 @@ export default function Dashboard() {
                 <span className="text-xs font-medium text-muted-foreground">Borrowed</span>
               </div>
               {isLoadingSummary ? <Skeleton className="h-6 w-20" /> : <div className="text-lg font-bold">{formatCurrency(summary?.totalBorrowed || 0)}</div>}
+              {!isLoadingSummary && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Repaid:</span>
+                    <span className="text-green-600 font-semibold">{formatCurrency(summary?.borrowRepaid || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Unpaid:</span>
+                    <span className="text-orange-600 font-semibold">{formatCurrency(summary?.borrowUnpaid || 0)}</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

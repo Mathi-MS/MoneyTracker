@@ -36,6 +36,36 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const totalSpent = sum(all as Array<Record<string, unknown>>, "spend");
   const totalLent = sum(all as Array<Record<string, unknown>>, "lend");
   const totalBorrowed = sum(all as Array<Record<string, unknown>>, "borrow");
+  
+  // Calculate repaid amounts for lend and borrow
+  const lendTxs = await db
+    .select({ id: transactionsTable.id, amount: transactionsTable.amount })
+    .from(transactionsTable)
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "lend"), isNull(transactionsTable.parentTransactionId)));
+
+  const borrowTxs = await db
+    .select({ id: transactionsTable.id, amount: transactionsTable.amount })
+    .from(transactionsTable)
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "borrow"), isNull(transactionsTable.parentTransactionId)));
+
+  // Get all repayments
+  const allRepayments = await db
+    .select({ parentTransactionId: transactionsTable.parentTransactionId, amount: transactionsTable.amount })
+    .from(transactionsTable)
+    .where(eq(transactionsTable.userId, userId));
+
+  const repaymentsByParent = allRepayments.reduce<Record<number, number>>((acc, r) => {
+    if (r.parentTransactionId) {
+      acc[r.parentTransactionId] = (acc[r.parentTransactionId] || 0) + parseFloat(r.amount as string);
+    }
+    return acc;
+  }, {});
+
+  const lendRepaid = lendTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
+  const borrowRepaid = borrowTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
+  const lendUnpaid = totalLent - lendRepaid;
+  const borrowUnpaid = totalBorrowed - borrowRepaid;
+  
   const totalBalance = totalEarned - totalSpent + totalBorrowed - totalLent;
   const todaySpend = sum(todayTxs as Array<Record<string, unknown>>, "spend");
   const monthlySpend = sum(monthTxs as Array<Record<string, unknown>>, "spend");
@@ -48,6 +78,10 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     totalSpent,
     totalLent,
     totalBorrowed,
+    lendRepaid,
+    lendUnpaid,
+    borrowRepaid,
+    borrowUnpaid,
     todaySpend,
     monthlySpend,
     savingPercentage: Math.round(savingPercentage * 10) / 10,
