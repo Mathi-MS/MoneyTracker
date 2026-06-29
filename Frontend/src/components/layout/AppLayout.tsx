@@ -19,6 +19,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <img src={logo} alt="Money Tracker" className="w-5 h-5" />
           </div>
           <span className="font-bold text-lg">TRACK X</span>
+          <span className="font-bold text-xs text-gray-400">({import.meta.env.VITE_VERSION})</span>
         </Link>
         {user && (
           <Link to="/settings">

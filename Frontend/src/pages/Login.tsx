@@ -22,7 +22,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-background px-6">
+    <div className="relative min-h-[100dvh] w-full flex flex-col items-center justify-center bg-background px-6">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -31,7 +31,7 @@ export default function Login() {
       >
         <WalletCards className="w-8 h-8" />
       </motion.div>
-
+      
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -74,6 +74,9 @@ export default function Login() {
           {loading ? "Signing in..." : "Log In"}
         </Button>
       </motion.form>
+      <span className="absolute bottom-3 right-3 text-xs text-gray-400">
+      v{import.meta.env.VITE_VERSION}
+    </span>
     </div>
   );
 }
