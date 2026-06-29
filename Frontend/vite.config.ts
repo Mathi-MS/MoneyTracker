@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
-  const port = Number(env.PORT) || 3000 || 5173;
+  const port = Number(env.PORT)  || 5173;
   const basePath = env.BASE_PATH || "/";
 
   return {

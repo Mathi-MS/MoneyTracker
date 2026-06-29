@@ -32,7 +32,6 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const sum = (txs: Array<Record<string, unknown>>, type: string) =>
     txs.filter((t) => t.type === type).reduce((acc, t) => acc + parseFloat(t.amount as string), 0);
 
-  const totalEarned = sum(all as Array<Record<string, unknown>>, "earn");
   const totalSpent = sum(all as Array<Record<string, unknown>>, "spend");
   const totalLent = sum(all as Array<Record<string, unknown>>, "lend");
   const totalBorrowed = sum(all as Array<Record<string, unknown>>, "borrow");
@@ -62,11 +61,12 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   }, {});
 
   const lendRepaid = lendTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
+  const totalEarned = sum(all as Array<Record<string, unknown>>, "earn") - lendRepaid;;
   const borrowRepaid = borrowTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
   const lendUnpaid = totalLent - lendRepaid;
   const borrowUnpaid = totalBorrowed - borrowRepaid;
   
-  const totalBalance = totalEarned - totalSpent + totalBorrowed - totalLent;
+  const totalBalance = totalEarned - totalSpent + totalBorrowed - totalLent + lendRepaid - borrowRepaid;
   const todaySpend = sum(todayTxs as Array<Record<string, unknown>>, "spend");
   const monthlySpend = sum(monthTxs as Array<Record<string, unknown>>, "spend");
   const monthlyEarn = sum(monthTxs as Array<Record<string, unknown>>, "earn");
