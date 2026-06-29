@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { WalletCards } from "lucide-react";
+import { WalletCards, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -11,6 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +57,23 @@ export default function Login() {
           className="h-14 rounded-xl text-base"
           required
         />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="h-14 rounded-xl text-base"
-          required
-        />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-14 rounded-xl text-base pr-12"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
         {error && <p className="text-destructive text-sm text-center">{error}</p>}
         <Button
           type="submit"
