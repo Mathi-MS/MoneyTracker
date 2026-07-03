@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetDashboardSummary, useListTransactions } from "@/lib/api-client";
+import { useMonthContext } from "@/lib/month-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDownLeft, ArrowUpRight, Wallet, ArrowRightLeft, CreditCard } from "lucide-react";
@@ -12,8 +13,9 @@ function formatCurrency(amount: number) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
-  const { data: transactions, isLoading: isLoadingTransactions } = useListTransactions({ limit: 5 });
+  const { month, year, startDate, endDate } = useMonthContext();
+  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({ month, year });
+  const { data: transactions, isLoading: isLoadingTransactions } = useListTransactions({ limit: 5, startDate, endDate });
 
   return (
     <AppLayout>
@@ -28,7 +30,9 @@ export default function Dashboard() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
             <CardContent className="p-6 relative z-10">
               <div className="flex flex-col gap-1 mb-6">
-                <span className="text-primary-foreground/80 font-medium text-sm">Total Balance</span>
+                <span className="text-primary-foreground/80 font-medium text-sm">
+                  {new Date(year, month - 1).toLocaleString("default", { month: "long", year: "numeric" })} Balance
+                </span>
                 {isLoadingSummary ? (
                   <Skeleton className="h-10 w-40 bg-white/20" />
                 ) : (

@@ -11,23 +11,23 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   }
   const userId = req.user.id;
   const now = new Date();
+  const reqMonth = req.query.month ? parseInt(req.query.month as string) : now.getMonth() + 1;
+  const reqYear = req.query.year ? parseInt(req.query.year as string) : now.getFullYear();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfMonth = new Date(reqYear, reqMonth - 1, 1);
+  const endOfMonth = new Date(reqYear, reqMonth, 0, 23, 59, 59, 999);
 
   const all = await db
     .select({ type: transactionsTable.type, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(eq(transactionsTable.userId, userId));
+    .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
 
   const todayTxs = await db
     .select({ type: transactionsTable.type, amount: transactionsTable.amount })
     .from(transactionsTable)
     .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfToday)));
 
-  const monthTxs = await db
-    .select({ type: transactionsTable.type, amount: transactionsTable.amount })
-    .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfMonth)));
+  const monthTxs = all;
 
   const sum = (txs: Array<Record<string, unknown>>, type: string) =>
     txs.filter((t) => t.type === type).reduce((acc, t) => acc + parseFloat(t.amount as string), 0);
@@ -40,18 +40,18 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const lendTxs = await db
     .select({ id: transactionsTable.id, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "lend"), isNull(transactionsTable.parentTransactionId)));
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "lend"), isNull(transactionsTable.parentTransactionId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
 
   const borrowTxs = await db
     .select({ id: transactionsTable.id, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "borrow"), isNull(transactionsTable.parentTransactionId)));
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "borrow"), isNull(transactionsTable.parentTransactionId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
 
   // Get all repayments
   const allRepayments = await db
     .select({ parentTransactionId: transactionsTable.parentTransactionId, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(eq(transactionsTable.userId, userId));
+    .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
 
   const repaymentsByParent = allRepayments.reduce<Record<number, number>>((acc, r) => {
     if (r.parentTransactionId) {
@@ -136,7 +136,10 @@ router.get("/dashboard/category-breakdown", async (req, res): Promise<void> => {
   }
   const userId = req.user.id;
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const reqMonth = req.query.month ? parseInt(req.query.month as string) : now.getMonth() + 1;
+  const reqYear = req.query.year ? parseInt(req.query.year as string) : now.getFullYear();
+  const startOfMonth = new Date(reqYear, reqMonth - 1, 1);
+  const endOfMonth = new Date(reqYear, reqMonth, 0, 23, 59, 59, 999);
 
   const txs = await db
     .select({
@@ -151,6 +154,7 @@ router.get("/dashboard/category-breakdown", async (req, res): Promise<void> => {
         eq(transactionsTable.type, "spend"),
         isNull(transactionsTable.parentTransactionId),
         gte(transactionsTable.date, startOfMonth),
+        lte(transactionsTable.date, endOfMonth),
       ),
     );
 

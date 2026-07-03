@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListTransactions, useCreateTransaction, useGetTransactionHistory } from "@/lib/api-client";
+import { useMonthContext } from "@/lib/month-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,10 +26,13 @@ export default function Transactions() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>(searchParams.get("type") || "all");
+  const { startDate, endDate } = useMonthContext();
 
   const queryParams = {
     ...(search ? { search } : {}),
-    ...(type && type !== "all" ? { type: type as any } : {})
+    ...(type && type !== "all" ? { type: type as any } : {}),
+    startDate,
+    endDate,
   };
 
   const { data: transactions, isLoading } = useListTransactions(queryParams);
@@ -122,7 +126,9 @@ export default function Transactions() {
       <div className="p-4 space-y-4">
         <div className="flex flex-col gap-2 mb-2">
           <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-sm text-muted-foreground">All your financial activity in one place.</p>
+          <p className="text-sm text-muted-foreground">
+            {new Date(endDate).toLocaleString("default", { month: "long", year: "numeric" })}
+          </p>
         </div>
 
         <div className="flex gap-2 sticky top-16 bg-background/80 backdrop-blur-md z-10 py-2 -mx-4 px-4">

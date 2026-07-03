@@ -14,16 +14,18 @@ function buildQueryString(params?: Record<string, any>) {
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
-export function useGetDashboardSummary() {
-  return useQuery({ queryKey: ["dashboard", "summary"], queryFn: () => apiFetch("/api/dashboard/summary") });
+export function useGetDashboardSummary(params?: { month?: number; year?: number }) {
+  const query = buildQueryString(params);
+  return useQuery({ queryKey: ["dashboard", "summary", params], queryFn: () => apiFetch(`/api/dashboard/summary${query}`) });
 }
 
 export function useGetMonthlyBreakdown() {
   return useQuery({ queryKey: ["dashboard", "monthly"], queryFn: () => apiFetch("/api/dashboard/monthly-breakdown") });
 }
 
-export function useGetCategoryBreakdown() {
-  return useQuery({ queryKey: ["dashboard", "category"], queryFn: () => apiFetch("/api/dashboard/category-breakdown") });
+export function useGetCategoryBreakdown(params?: { month?: number; year?: number }) {
+  const query = buildQueryString(params);
+  return useQuery({ queryKey: ["dashboard", "category", params], queryFn: () => apiFetch(`/api/dashboard/category-breakdown${query}`) });
 }
 
 // ── Transactions ───────────────────────────────────────────────────────────

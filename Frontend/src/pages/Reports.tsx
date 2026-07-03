@@ -1,13 +1,15 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGetMonthlyBreakdown, useGetCategoryBreakdown } from "@/lib/api-client";
+import { useMonthContext } from "@/lib/month-context";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 export default function Reports() {
+  const { month, year } = useMonthContext();
   const { data: monthlyData, isLoading: isMonthlyLoading } = useGetMonthlyBreakdown();
-  const { data: categoryData, isLoading: isCategoryLoading } = useGetCategoryBreakdown();
+  const { data: categoryData, isLoading: isCategoryLoading } = useGetCategoryBreakdown({ month, year });
 
   const formatCurrency = (val: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
 
@@ -16,7 +18,9 @@ export default function Reports() {
       <div className="p-4 space-y-6 pb-8">
         <div className="flex flex-col gap-2 mb-2">
           <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-          <p className="text-sm text-muted-foreground">Insights into your financial flow.</p>
+          <p className="text-sm text-muted-foreground">
+            {new Date(year, month - 1).toLocaleString("default", { month: "long", year: "numeric" })}
+          </p>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
