@@ -17,7 +17,8 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const startOfMonth = new Date(reqYear, reqMonth - 1, 1);
   const endOfMonth = new Date(reqYear, reqMonth, 0, 23, 59, 59, 999);
 
-  const all = await db
+  // Month-scoped: earn/spend only within selected month
+  const monthTxs = await db
     .select({ type: transactionsTable.type, amount: transactionsTable.amount })
     .from(transactionsTable)
     .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
@@ -27,31 +28,30 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     .from(transactionsTable)
     .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfToday)));
 
-  const monthTxs = all;
-
   const sum = (txs: Array<Record<string, unknown>>, type: string) =>
     txs.filter((t) => t.type === type).reduce((acc, t) => acc + parseFloat(t.amount as string), 0);
 
-  const totalSpent = sum(all as Array<Record<string, unknown>>, "spend");
-  const totalLent = sum(all as Array<Record<string, unknown>>, "lend");
-  const totalBorrowed = sum(all as Array<Record<string, unknown>>, "borrow");
-  
-  // Calculate repaid amounts for lend and borrow
+  const totalSpent = sum(monthTxs as Array<Record<string, unknown>>, "spend");
+
+  // Carry-forward: lend/borrow — fetch ALL up to end of selected month (no start date)
   const lendTxs = await db
     .select({ id: transactionsTable.id, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "lend"), isNull(transactionsTable.parentTransactionId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "lend"), isNull(transactionsTable.parentTransactionId), lte(transactionsTable.date, endOfMonth)));
 
   const borrowTxs = await db
     .select({ id: transactionsTable.id, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "borrow"), isNull(transactionsTable.parentTransactionId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
+    .where(and(eq(transactionsTable.userId, userId), eq(transactionsTable.type, "borrow"), isNull(transactionsTable.parentTransactionId), lte(transactionsTable.date, endOfMonth)));
 
-  // Get all repayments
+  const totalLent = lendTxs.reduce((acc, t) => acc + parseFloat(t.amount as string), 0);
+  const totalBorrowed = borrowTxs.reduce((acc, t) => acc + parseFloat(t.amount as string), 0);
+
+  // All repayments up to end of selected month
   const allRepayments = await db
     .select({ parentTransactionId: transactionsTable.parentTransactionId, amount: transactionsTable.amount })
     .from(transactionsTable)
-    .where(and(eq(transactionsTable.userId, userId), gte(transactionsTable.date, startOfMonth), lte(transactionsTable.date, endOfMonth)));
+    .where(and(eq(transactionsTable.userId, userId), lte(transactionsTable.date, endOfMonth)));
 
   const repaymentsByParent = allRepayments.reduce<Record<number, number>>((acc, r) => {
     if (r.parentTransactionId) {
@@ -60,16 +60,16 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
     return acc;
   }, {});
 
-  const lendRepaid = lendTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
-  const totalEarned = sum(all as Array<Record<string, unknown>>, "earn") - lendRepaid;;
-  const borrowRepaid = borrowTxs.reduce((sum, tx) => sum + (repaymentsByParent[tx.id as number] || 0), 0);
+  const lendRepaid = lendTxs.reduce((s, tx) => s + (repaymentsByParent[tx.id as number] || 0), 0);
+  const borrowRepaid = borrowTxs.reduce((s, tx) => s + (repaymentsByParent[tx.id as number] || 0), 0);
   const lendUnpaid = totalLent - lendRepaid;
   const borrowUnpaid = totalBorrowed - borrowRepaid;
-  
+
+  const totalEarned = sum(monthTxs as Array<Record<string, unknown>>, "earn");
   const totalBalance = totalEarned - totalSpent + totalBorrowed - totalLent + lendRepaid - borrowRepaid;
   const todaySpend = sum(todayTxs as Array<Record<string, unknown>>, "spend");
-  const monthlySpend = sum(monthTxs as Array<Record<string, unknown>>, "spend");
-  const monthlyEarn = sum(monthTxs as Array<Record<string, unknown>>, "earn");
+  const monthlySpend = totalSpent;
+  const monthlyEarn = totalEarned;
   const savingPercentage = monthlyEarn > 0 ? Math.max(0, ((monthlyEarn - monthlySpend) / monthlyEarn) * 100) : 0;
 
   res.json({

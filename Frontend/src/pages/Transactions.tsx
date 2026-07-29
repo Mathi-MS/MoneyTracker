@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useListTransactions, useCreateTransaction, useGetTransactionHistory } from "@/lib/api-client";
-import { useMonthContext } from "@/lib/month-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { Search, CreditCard } from "lucide-react";
+import { Search, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount);
@@ -21,18 +20,37 @@ function getRepaymentType(txType: string) {
   return txType === "borrow" ? "spend" : "earn";
 }
 
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
 export default function Transactions() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>(searchParams.get("type") || "all");
-  const { startDate, endDate } = useMonthContext();
+
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
+
+  const isDebtType = type === "lend" || type === "borrow";
 
   const queryParams = {
     ...(search ? { search } : {}),
     ...(type && type !== "all" ? { type: type as any } : {}),
-    startDate,
-    endDate,
+    ...(isDebtType ? {} : { startDate, endDate }),
+  };
+
+  const prevMonth = () => {
+    if (month === 1) { setMonth(12); setYear(y => y - 1); }
+    else setMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (month === 12) { setMonth(1); setYear(y => y + 1); }
+    else setMonth(m => m + 1);
   };
 
   const { data: transactions, isLoading } = useListTransactions(queryParams);
@@ -126,9 +144,19 @@ export default function Transactions() {
       <div className="p-4 space-y-4">
         <div className="flex flex-col gap-2 mb-2">
           <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date(endDate).toLocaleString("default", { month: "long", year: "numeric" })}
-          </p>
+          {isDebtType ? (
+            <p className="text-sm text-muted-foreground">All time</p>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-secondary/50 transition-colors">
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <span className="text-sm text-muted-foreground font-medium">{MONTHS[month - 1]} {year}</span>
+              <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-secondary/50 transition-colors">
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 sticky top-16 bg-background/80 backdrop-blur-md z-10 py-2 -mx-4 px-4">

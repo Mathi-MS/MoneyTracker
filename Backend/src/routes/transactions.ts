@@ -159,10 +159,11 @@ router.get("/transactions", async (req, res): Promise<void> => {
   if (queryData.parentTransactionId !== undefined) {
     conditions.push(eq(transactionsTable.parentTransactionId, queryData.parentTransactionId));
   }
-  if (queryData.startDate) {
+  const isDebtTypeFilter = queryData.type === "lend" || queryData.type === "borrow";
+  if (queryData.startDate && !isDebtTypeFilter) {
     conditions.push(gte(transactionsTable.date, new Date(queryData.startDate)));
   }
-  if (queryData.endDate) {
+  if (queryData.endDate && !isDebtTypeFilter) {
     conditions.push(lte(transactionsTable.date, new Date(queryData.endDate)));
   }
 
