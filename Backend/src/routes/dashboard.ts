@@ -17,6 +17,12 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const startOfMonth = new Date(reqYear, reqMonth - 1, 1);
   const endOfMonth = new Date(reqYear, reqMonth, 0, 23, 59, 59, 999);
 
+  // All-time transactions for balance calculation
+  const allTxs = await db
+    .select({ type: transactionsTable.type, amount: transactionsTable.amount, parentTransactionId: transactionsTable.parentTransactionId, id: transactionsTable.id })
+    .from(transactionsTable)
+    .where(eq(transactionsTable.userId, userId));
+
   // Month-scoped: earn/spend only within selected month
   const monthTxs = await db
     .select({ type: transactionsTable.type, amount: transactionsTable.amount })
@@ -66,7 +72,22 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const borrowUnpaid = totalBorrowed - borrowRepaid;
 
   const totalEarned = sum(monthTxs as Array<Record<string, unknown>>, "earn");
-  const totalBalance = totalEarned - totalSpent + totalBorrowed - totalLent + lendRepaid - borrowRepaid;
+
+  // Calculate true balance from all-time transactions
+  const idToType = new Map(allTxs.map((tx) => [tx.id as number, tx.type as string]));
+  const totalBalance = allTxs.reduce((balance, tx) => {
+    const amount = parseFloat(tx.amount as string);
+    if (Number.isNaN(amount)) return balance;
+    if (tx.parentTransactionId != null) {
+      const parentType = idToType.get(tx.parentTransactionId as number);
+      if (parentType === "lend") return balance + amount;
+      if (parentType === "borrow") return balance - amount;
+      return balance;
+    }
+    if (tx.type === "earn" || tx.type === "borrow") return balance + amount;
+    if (tx.type === "spend" || tx.type === "lend") return balance - amount;
+    return balance;
+  }, 0);
   const todaySpend = sum(todayTxs as Array<Record<string, unknown>>, "spend");
   const monthlySpend = totalSpent;
   const monthlyEarn = totalEarned;

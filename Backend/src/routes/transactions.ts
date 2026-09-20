@@ -39,13 +39,26 @@ function revertTransaction(balance: number, type: TransactionType, amount: numbe
 
 async function calculateBalance(userId: number | string) {
   const txs = await db
-    .select({ type: transactionsTable.type, amount: transactionsTable.amount })
+    .select({ type: transactionsTable.type, amount: transactionsTable.amount, parentTransactionId: transactionsTable.parentTransactionId, id: transactionsTable.id })
     .from(transactionsTable)
     .where(eq(transactionsTable.userId, userId));
+
+  // Build a map of parentId -> parent type for repayment lookups
+  const idToType = new Map(txs.map((tx) => [tx.id as number, tx.type as TransactionType]));
 
   return txs.reduce((balance, tx) => {
     const amount = parseFloat(tx.amount as unknown as string);
     if (Number.isNaN(amount)) return balance;
+
+    if (tx.parentTransactionId != null) {
+      // Repayment: reverse the effect of the parent type
+      // lend repaid → money comes back to you (+)
+      // borrow repaid → money leaves you (-)
+      const parentType = idToType.get(tx.parentTransactionId as number);
+      if (parentType === "lend") return balance + amount;
+      if (parentType === "borrow") return balance - amount;
+      return balance;
+    }
 
     const type = tx.type as TransactionType;
     if (!type || !["spend", "earn", "lend", "borrow"].includes(type)) return balance;
