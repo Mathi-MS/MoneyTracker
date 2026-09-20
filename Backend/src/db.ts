@@ -267,9 +267,7 @@ export const db = {
       async _exec(): Promise<Record<string, unknown>[]> {
         const model = modelFor(_table) as any;
         const query = buildMongoQuery(_conditions);
-        let cursor = model.find(query);
-        if (_limitVal) cursor = cursor.limit(_limitVal);
-        if (_offsetVal) cursor = cursor.skip(_offsetVal);
+        const cursor = model.find(query);
         const docs = await cursor.exec();
         const results = docs.map((d: Document) => docToPlain(d)!);
         

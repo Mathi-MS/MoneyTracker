@@ -232,8 +232,8 @@ router.get("/transactions", async (req, res): Promise<void> => {
         t.category?.name.toLowerCase().includes(searchLower) ||
         t.person?.name.toLowerCase().includes(searchLower),
     );
-    // Sort by date descending
-    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by id descending — auto-incremented id guarantees insertion order
+    filtered.sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
     const sliced = query.data.limit
       ? filtered.slice(query.data.offset ?? 0, (query.data.offset ?? 0) + query.data.limit)
       : filtered;
@@ -244,7 +244,7 @@ router.get("/transactions", async (req, res): Promise<void> => {
 
   // Fetch all transactions first
   let txs = await baseQuery;
-  // Sort by id descending (newest first - higher id = newer transaction)
+  // Sort by id descending — auto-incremented id guarantees insertion order
   txs.sort((a: any, b: any) => (b.id || 0) - (a.id || 0));
   
   // Apply limit and offset after sorting
